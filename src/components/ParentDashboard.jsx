@@ -52,31 +52,63 @@ const ParentDashboard = ({ onExit }) => {
     };
 
     const handleUpload = async () => {
-        if (!sheetUrl) return;
+        if (!sheetUrl) {
+            showAlert({
+                title: 'ไม่พบ URL',
+                message: '⚠️ กรุณากรอก Google Apps Script URL ก่อน',
+                variant: 'warning'
+            });
+            return;
+        }
+
         setIsUploading(true);
         setMessage('');
+
         try {
-            const currentVocab = getVocabData() || [];
-            if (currentVocab.length === 0) {
-                showAlert({ title: 'ข้อควรรู้', message: '⚠️ ไม่พบข้อมูลคำศัพท์ในเครื่อง (ใช้ข้อมูลเริ่มต้นจาก CSV)', variant: 'warning' });
-                // Optionally we could upload CSV data if we parsed it, but usually customVocab is what we want to sync up.
+            const currentVocab = getVocabData();
+
+            // ตรวจสอบว่ามีข้อมูลหรือไม่
+            if (!currentVocab || currentVocab.length === 0) {
+                setIsUploading(false);
+                showAlert({
+                    title: 'ไม่มีข้อมูล',
+                    message: '⚠️ ไม่พบข้อมูลคำศัพท์ใน LocalStorage\n\nกรุณา "ดึงข้อมูลลง" จาก Google Sheets ก่อน\nหรือเล่นเกมเพื่อให้ระบบโหลดข้อมูลจาก CSV',
+                    variant: 'warning'
+                });
+                return;
             }
 
-            // Note: If customVocab is null, we might want to warn user.
-            // For now let's assume we send currentVocab (empty array if null which is bad, but handleSync handles fetch).
-            // Let's rely on what's in local storage.
-
+            console.log(`Uploading ${currentVocab.length} vocab items...`);
             const result = await updateSheetData(sheetUrl, currentVocab);
 
-            if (result.status === 'success') {
+            if (result && result.status === 'success') {
                 const time = new Date().toLocaleString();
                 setLastSyncTime(time);
-                showAlert({ title: 'สำเร็จ', message: `☁️ อัปโหลดสำเร็จ! จำนวน ${result.count} รายการ`, variant: 'success' });
+                showAlert({
+                    title: 'สำเร็จ',
+                    message: `☁️ อัปโหลดสำเร็จ! จำนวน ${result.count} รายการ`,
+                    variant: 'success'
+                });
             } else {
-                throw new Error('Upload failed');
+                throw new Error(result?.message || 'Upload failed - ไม่ได้รับ response ที่ถูกต้อง');
             }
         } catch (error) {
-            showAlert({ title: 'ผิดพลาด', message: `❌ อัปโหลดไม่สำเร็จ: ${error.message}`, variant: 'error' });
+            console.error('Upload error:', error);
+
+            // แสดง error message ที่ละเอียดขึ้น
+            let errorMessage = error.message;
+
+            if (error.message.includes('Failed to fetch')) {
+                errorMessage = 'ไม่สามารถเชื่อมต่อกับ Google Sheets ได้\n\nกรุณาตรวจสอบ:\n1. URL ถูกต้องหรือไม่\n2. Deploy Apps Script เป็น "Anyone" แล้วหรือยัง\n3. Internet connection';
+            } else if (error.message.includes('NetworkError')) {
+                errorMessage = 'เกิดข้อผิดพลาดเครือข่าย\nกรุณาตรวจสอบ Internet connection';
+            }
+
+            showAlert({
+                title: 'ผิดพลาด',
+                message: `❌ อัปโหลดไม่สำเร็จ:\n${errorMessage}`,
+                variant: 'error'
+            });
         } finally {
             setIsUploading(false);
         }
@@ -176,7 +208,11 @@ const ParentDashboard = ({ onExit }) => {
                                     className="w-full p-4 border-2 border-gray-200 rounded-xl bg-gray-50 focus:border-green-500 focus:outline-none transition-colors"
                                     placeholder="https://script.google.com/..."
                                     value={sheetUrl}
-                                    onChange={e => setSheetUrl(e.target.value)}
+                                    onChange={e => {
+                                        const newUrl = e.target.value;
+                                        setSheetUrl(newUrl);
+                                        localStorage.setItem('larnvocab_sheet_url', newUrl);
+                                    }}
                                 />
                             </div>
 

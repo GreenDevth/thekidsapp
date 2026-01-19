@@ -125,3 +125,4 @@ dist-ssr/
 *.njsproj
 *.sln
 *.sw?
+google_app_scripts.gs
