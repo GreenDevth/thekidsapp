@@ -34,9 +34,14 @@ const GameScreen = ({ sessionData, onFinish, onExit }) => {
         window.speechSynthesis.cancel();
         const letters = currentWord.en.split('');
         for (let char of letters) {
-            speak(char, 'en-US', false, 1.5);
-            await new Promise(r => setTimeout(r, 30));
+            // อ่านตัวอักษรด้วยความเร็วปกติ (1.2)
+            // await เพื่อให้พูดจบก่อนเริ่มตัวถัดไป (ป้องกันเสียงซ้อนและควบคุมจังหวะ)
+            await speak(char, 'en-US', false, 1.2);
+            // เว้นวรรคเล็กน้อยหลังพูดจบ (100ms) ให้ดูเป็นธรรมชาติ
+            await new Promise(r => setTimeout(r, 100));
         }
+        // เว้นวรรคก่อนพูดคำเต็ม (300ms)
+        await new Promise(r => setTimeout(r, 200));
         speak(currentWord.en, 'en-US', false, 1.1);
     };
 
