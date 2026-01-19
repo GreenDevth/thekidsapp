@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { Home, Lock, FileText, RefreshCw, Trash2, CheckCircle, Smartphone } from 'lucide-react';
+import { Home, Lock, FileText, RefreshCw, Trash2, CheckCircle, Smartphone, BookOpen } from 'lucide-react';
 import { getVocabData, saveVocabData, resetAllData, getParentPin, setParentPin, saveProgress, loadProgress } from '../utils/storage';
 import { fetchVocabFromSheet, updateSheetData } from '../utils/googleSheet';
 import { useModal } from '../contexts/ModalContext';
+import VocabManager from './VocabManager';
 
 const ParentDashboard = ({ onExit }) => {
     const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -18,10 +19,24 @@ const ParentDashboard = ({ onExit }) => {
     const [isUploading, setIsUploading] = useState(false);
     const [lastSyncTime, setLastSyncTime] = useState(localStorage.getItem('larnvocab_last_sync') || '-');
 
+    // Vocab State
+    const [vocabList, setVocabList] = useState([]);
+
     useEffect(() => {
         const savedPin = getParentPin();
         if (savedPin) setCurrentPin(savedPin);
+
+        // Load Vocab Data
+        const currentData = getVocabData();
+        if (currentData) {
+            setVocabList(currentData);
+        }
     }, []);
+
+    const handleUpdateVocab = (newList) => {
+        setVocabList(newList);
+        saveVocabData(newList);
+    };
 
     const handleLogin = (e) => {
         e.preventDefault();
@@ -43,6 +58,7 @@ const ParentDashboard = ({ onExit }) => {
             const time = new Date().toLocaleString();
             localStorage.setItem('larnvocab_last_sync', time);
             setLastSyncTime(time);
+            setVocabList(data); // Update state
             showAlert({ title: 'สำเร็จ', message: `✅ Sync สำเร็จ! โหลดคำศัพท์มาทั้งหมด ${data.length} คำ`, variant: 'success' });
         } catch (error) {
             showAlert({ title: 'ผิดพลาด', message: `❌ เกิดข้อผิดพลาด: ${error.message}`, variant: 'error' });
@@ -185,6 +201,9 @@ const ParentDashboard = ({ onExit }) => {
                     <button onClick={() => setActiveTab('settings')} className={`flex items-center gap-2 px-6 py-3 rounded-full font-bold transition-all ${activeTab === 'settings' ? 'bg-brand-blue text-white shadow-lg' : 'bg-white text-gray-600 shadow-sm'}`}>
                         <Lock size={20} /> Settings
                     </button>
+                    <button onClick={() => setActiveTab('vocab')} className={`flex items-center gap-2 px-6 py-3 rounded-full font-bold transition-all ${activeTab === 'vocab' ? 'bg-brand-blue text-white shadow-lg' : 'bg-white text-gray-600 shadow-sm'}`}>
+                        <BookOpen size={20} /> Vocab Manager
+                    </button>
                 </div>
 
                 <div className="bg-white rounded-3xl p-8 shadow-sm border border-gray-100">
@@ -252,15 +271,25 @@ const ParentDashboard = ({ onExit }) => {
                         </div>
                     )}
 
+                    {activeTab === 'vocab' && (
+                        <div className="animate-fade-in">
+                            <VocabManager vocabList={vocabList} onUpdateVocab={handleUpdateVocab} />
+                        </div>
+                    )}
+
                     {activeTab === 'data' && (
                         <div className="text-center py-8 max-w-md mx-auto">
                             <div className="bg-red-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
                                 <Trash2 className="text-red-500" size={32} />
                             </div>
-                            <h3 className="text-xl font-bold mb-2">Factory Reset</h3>
-                            <p className="text-gray-500 mb-6">เริ่มเกมใหม่ทั้งหมด (ลบดาว, ชื่อ, และด่านที่ผ่าน)</p>
-                            <button onClick={handleReset} className="bg-red-500 hover:bg-red-600 text-white px-8 py-3 rounded-xl font-bold shadow-lg hover:shadow-red-200 transition-all w-full">
-                                ล้างข้อมูลทั้งหมด
+                            <h2 className="text-2xl font-bold text-gray-800 mb-2">จัดการข้อมูล</h2>
+                            <p className="text-gray-500 mb-8">ล้างข้อมูลความก้าวหน้าทั้งหมด (คำศัพท์จะไม่ถูกลบ)</p>
+                            <button
+                                onClick={handleReset}
+                                className="w-full py-4 bg-white border-2 border-red-100 text-red-500 rounded-xl font-bold hover:bg-red-50 hover:border-red-200 transition-all flex items-center justify-center gap-2"
+                            >
+                                <Trash2 size={20} />
+                                ล้างข้อมูลความก้าวหน้า
                             </button>
                         </div>
                     )}
@@ -272,8 +301,8 @@ const ParentDashboard = ({ onExit }) => {
                         </div>
                     )}
                 </div>
-            </main>
-        </div>
+            </main >
+        </div >
     );
 };
 

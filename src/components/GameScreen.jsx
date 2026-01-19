@@ -134,51 +134,61 @@ const GameScreen = ({ sessionData, onFinish, onExit }) => {
                 </AnimatePresence>
 
                 {/* Image */}
-                <div className="w-64 h-64 bg-gray-100 rounded-[2rem] overflow-hidden mb-6 shadow-inner border-4 border-white">
-                    <img
-                        src={currentWord.image}
-                        alt={currentWord.en}
-                        className="w-full h-full object-cover hover:scale-110 transition-transform duration-500"
-                        onError={(e) => {
-                            // Fallback image
-                            e.target.src = `https://placehold.co/400x400/png?text=${currentWord.en}`;
-                        }}
-                    />
+                <div className="w-48 h-48 sm:w-56 sm:h-56 md:w-64 md:h-64 bg-gray-100 rounded-[2rem] overflow-hidden mb-4 sm:mb-6 shadow-inner border-4 border-white relative">
+                    {currentWord.image ? (
+                        <img
+                            src={currentWord.image}
+                            alt={currentWord.en}
+                            className="w-full h-full object-cover hover:scale-110 transition-transform duration-500"
+                            onError={(e) => {
+                                // ซ่อนรูปและแสดง ? แทน
+                                e.target.style.display = 'none';
+                                e.target.nextSibling.style.display = 'flex';
+                            }}
+                        />
+                    ) : null}
+                    {/* Fallback: เครื่องหมาย ? */}
+                    <div
+                        className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-blue-100 to-purple-100"
+                        style={{ display: currentWord.image ? 'none' : 'flex' }}
+                    >
+                        <span className="text-9xl font-bold text-gray-300">?</span>
+                    </div>
                 </div>
 
                 {/* Word Display & Sound Controls */}
-                <div className="flex flex-col items-center gap-3 mb-8 w-full">
-                    <h2 className="text-4xl font-black text-gray-800">{currentWord.th}</h2>
+                <div className="flex flex-col items-center gap-2 sm:gap-3 mb-6 sm:mb-8 w-full">
+                    <h2 className="text-3xl sm:text-4xl font-black text-gray-800">{currentWord.th}</h2>
 
-                    <div className="flex gap-4 mt-2">
+                    <div className="flex flex-wrap gap-2 mt-2 justify-center">
                         <button
                             onClick={speakWord}
-                            className="flex items-center gap-2 px-5 py-3 bg-brand-yellow text-white rounded-2xl shadow-lg hover:scale-105 transition-transform active:scale-95 font-bold"
+                            className="flex items-center gap-1.5 sm:gap-2 px-3 py-2 sm:px-5 sm:py-3 bg-brand-yellow text-white rounded-xl sm:rounded-2xl shadow-lg hover:scale-105 transition-transform active:scale-95 font-bold text-sm sm:text-base"
                         >
-                            <Volume2 size={24} /> Listen
+                            <Volume2 size={20} className="sm:w-6 sm:h-6" /> Listen
                         </button>
                         <button
                             onClick={speakThai}
-                            className="flex items-center gap-2 px-5 py-3 bg-brand-green text-white rounded-2xl shadow-lg hover:scale-105 transition-transform active:scale-95 font-bold"
+                            className="flex items-center gap-1.5 sm:gap-2 px-3 py-2 sm:px-5 sm:py-3 bg-brand-green text-white rounded-xl sm:rounded-2xl shadow-lg hover:scale-105 transition-transform active:scale-95 font-bold text-sm sm:text-base"
                         >
-                            <Volume2 size={24} /> แปลไทย
+                            <Volume2 size={20} className="sm:w-6 sm:h-6" /> แปลไทย
                         </button>
                         <button
                             onClick={spellWord}
-                            className="flex items-center gap-2 px-5 py-3 bg-brand-pink text-white rounded-2xl shadow-lg hover:scale-105 transition-transform active:scale-95 font-bold"
+                            className="flex items-center gap-1.5 sm:gap-2 px-3 py-2 sm:px-5 sm:py-3 bg-brand-pink text-white rounded-xl sm:rounded-2xl shadow-lg hover:scale-105 transition-transform active:scale-95 font-bold text-sm sm:text-base"
                         >
-                            <Type size={24} /> Spell
+                            <Type size={20} className="sm:w-6 sm:h-6" /> Spell
                         </button>
                     </div>
                 </div>
 
                 {/* Spelling Slots */}
-                <div className="flex flex-wrap justify-center gap-2 mb-8 min-h-[80px]">
+                <div className="flex flex-wrap justify-center gap-1.5 sm:gap-2 mb-6 sm:mb-8 min-h-[60px] sm:min-h-[80px]">
                     {targetWord.split('').map((char, idx) => (
                         <motion.div
                             key={idx}
                             animate={idx < userInput.length ? { scale: [1, 1.2, 1] } : {}}
-                            className={`w-14 h-16 sm:w-16 sm:h-20 rounded-2xl flex items-center justify-center text-4xl font-black border-b-[6px] 
+                            className={`w-11 h-13 sm:w-14 sm:h-16 md:w-16 md:h-20 rounded-xl sm:rounded-2xl flex items-center justify-center text-2xl sm:text-3xl md:text-4xl font-black border-b-4 sm:border-b-[6px] 
                 ${idx < userInput.length
                                     ? 'bg-brand-blue text-white border-blue-600 shadow-md'
                                     : 'bg-gray-100 text-gray-300 border-gray-200 dashed border-2'}
@@ -190,19 +200,19 @@ const GameScreen = ({ sessionData, onFinish, onExit }) => {
                 </div>
 
                 {/* Virtual Keyboard */}
-                <div className="w-full flex flex-col gap-2 mt-auto pb-4">
+                <div className="w-full flex flex-col gap-1.5 sm:gap-2 mt-auto pb-4">
                     {[
                         "QWERTYUIOP".split(""),
                         "ASDFGHJKL".split(""),
                         "ZXCVBNM".split("")
                     ].map((row, rowIdx) => (
-                        <div key={rowIdx} className="flex justify-center gap-1 sm:gap-2">
+                        <div key={rowIdx} className="flex justify-center gap-1.5 sm:gap-2">
                             {row.map((char) => (
                                 <button
                                     key={char}
                                     onClick={() => handleKeyPress(char)}
                                     disabled={userInput.includes(char) && targetWord.includes(char) && userInput.filter(c => c === char).length >= targetWord.split(char).length - 1}
-                                    className="w-8 h-10 sm:w-12 sm:h-14 bg-white border-2 border-gray-100 hover:border-brand-pink hover:bg-pink-50 rounded-lg sm:rounded-xl font-bold text-lg sm:text-xl text-gray-600 shadow-sm active:scale-95 transition-all flex items-center justify-center"
+                                    className="w-9 h-11 sm:w-12 sm:h-14 bg-white border-2 border-gray-100 hover:border-brand-pink hover:bg-pink-50 rounded-lg sm:rounded-xl font-bold text-lg sm:text-xl text-gray-600 shadow-sm active:scale-95 transition-all flex items-center justify-center"
                                 >
                                     {char}
                                 </button>

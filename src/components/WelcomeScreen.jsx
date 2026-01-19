@@ -31,10 +31,10 @@ const WelcomeScreen = ({ sessions, onStartSession, onUnlockSession, onOpenParent
                 >
                     <BookOpen size={48} className="text-brand-blue" />
                 </motion.div>
-                <h1 className="text-4xl md:text-5xl font-bold text-gray-800 mb-2 drop-shadow-sm font-mali">
+                <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-gray-800 mb-2 drop-shadow-sm font-mali">
                     ศัพท์หรรษา
                 </h1>
-                <p className="text-gray-500 text-xl font-medium font-mali">สนุกกับภาษาอังกฤษวันละคำ!</p>
+                <p className="text-gray-500 text-lg sm:text-xl font-medium font-mali">สนุกกับภาษาอังกฤษวันละคำ!</p>
 
                 <div className="mt-6 flex justify-center">
                     <div className="bg-yellow-100 text-yellow-700 px-6 py-2 rounded-full font-bold text-xl flex items-center gap-2 shadow-inner border-2 border-yellow-200">
@@ -44,7 +44,7 @@ const WelcomeScreen = ({ sessions, onStartSession, onUnlockSession, onOpenParent
                 </div>
             </header>
 
-            <div className="max-w-4xl mx-auto grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+            <div className="max-w-4xl mx-auto grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6">
                 {Object.keys(sessions).map((sessionIdString, index) => {
                     const sessionId = parseInt(sessionIdString);
                     const isUnlocked = unlockedSessions.includes(sessionId);
