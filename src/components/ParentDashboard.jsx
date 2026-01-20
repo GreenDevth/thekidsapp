@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { Home, Lock, FileText, RefreshCw, Trash2, CheckCircle, Smartphone, BookOpen } from 'lucide-react';
-import { getVocabData, saveVocabData, resetAllData, getParentPin, setParentPin, saveProgress, loadProgress } from '../utils/storage';
+import { Home, Lock, FileText, RefreshCw, Trash2, CheckCircle, Smartphone, BookOpen, Unlock } from 'lucide-react';
+import { getVocabData, saveVocabData, resetAllData, getParentPin, setParentPin, saveProgress, loadProgress, getUnlockedSessions, setUnlockedSessions } from '../utils/storage';
 import { fetchVocabFromSheet, updateSheetData } from '../utils/googleSheet';
+import { GOOGLE_APPS_SCRIPT_URL } from '../config';
 import { useModal } from '../contexts/ModalContext';
 import VocabManager from './VocabManager';
 
@@ -14,7 +15,7 @@ const ParentDashboard = ({ onExit }) => {
     const { showAlert, showConfirm } = useModal();
 
     // Sync State
-    const [sheetUrl, setSheetUrl] = useState(localStorage.getItem('larnvocab_sheet_url') || '');
+    const [sheetUrl, setSheetUrl] = useState(localStorage.getItem('larnvocab_sheet_url') || GOOGLE_APPS_SCRIPT_URL);
     const [isSyncing, setIsSyncing] = useState(false);
     const [isUploading, setIsUploading] = useState(false);
     const [lastSyncTime, setLastSyncTime] = useState(localStorage.getItem('larnvocab_last_sync') || '-');
@@ -204,6 +205,9 @@ const ParentDashboard = ({ onExit }) => {
                     <button onClick={() => setActiveTab('vocab')} className={`flex items-center gap-2 px-6 py-3 rounded-full font-bold transition-all ${activeTab === 'vocab' ? 'bg-brand-blue text-white shadow-lg' : 'bg-white text-gray-600 shadow-sm'}`}>
                         <BookOpen size={20} /> Vocab Manager
                     </button>
+                    <button onClick={() => setActiveTab('levels')} className={`flex items-center gap-2 px-6 py-3 rounded-full font-bold transition-all ${activeTab === 'levels' ? 'bg-brand-blue text-white shadow-lg' : 'bg-white text-gray-600 shadow-sm'}`}>
+                        <Unlock size={20} /> Levels
+                    </button>
                 </div>
 
                 <div className="bg-white rounded-3xl p-8 shadow-sm border border-gray-100">
@@ -300,6 +304,10 @@ const ParentDashboard = ({ onExit }) => {
                             <PinChangeForm onSave={handleChangePin} />
                         </div>
                     )}
+
+                    {activeTab === 'levels' && (
+                        <LevelManager />
+                    )}
                 </div>
             </main >
         </div >
@@ -325,6 +333,102 @@ const PinChangeForm = ({ onSave }) => {
             >
                 บันทึกรหัสใหม่
             </button>
+        </div>
+    );
+};
+
+const LevelManager = () => {
+    const [vocabList, setVocabList] = useState([]);
+    const [unlockedSessions, setUnlocked] = useState([]);
+    const { showAlert } = useModal();
+
+    useEffect(() => {
+        setVocabList(getVocabData() || []);
+        setUnlocked(getUnlockedSessions() || [1]);
+    }, []);
+
+    // Helper to get total sessions
+    const totalSessions = React.useMemo(() => {
+        const sessions = new Set();
+        vocabList.forEach(v => {
+            if (v.session) sessions.add(parseInt(v.session));
+        });
+        // If vocabList is empty (first load from CSV not yet happened in Parent Dashboard context), maybe we need fallback
+        // But normally vocabData should be available if they played or we should let them sync first.
+        // Let's also check if we have max session in unlocked to at least show those.
+        const maxUnlocked = Math.max(...unlockedSessions, 0);
+        const maxFromVocab = sessions.size > 0 ? Math.max(...Array.from(sessions)) : 0;
+
+        const max = Math.max(maxUnlocked, maxFromVocab, 5); // Default show at least 5 for demo if empty
+        return Array.from({ length: max }, (_, i) => i + 1);
+    }, [vocabList, unlockedSessions]);
+
+    const handleToggle = (sessionId) => {
+        let newUnlocked;
+        if (unlockedSessions.includes(sessionId)) {
+            // Prevent locking session 1 (optional, but usually safe to keep 1 unlocked)
+            if (sessionId === 1) {
+                showAlert({ title: 'แจ้งเตือน', message: 'ควรเปิดด่านที่ 1 ไว้เสมอ', variant: 'warning' });
+                return;
+            }
+            newUnlocked = unlockedSessions.filter(id => id !== sessionId);
+        } else {
+            newUnlocked = [...unlockedSessions, sessionId].sort((a, b) => a - b);
+        }
+        setUnlocked(newUnlocked);
+        setUnlockedSessions(newUnlocked);
+    };
+
+    return (
+        <div className="max-w-2xl mx-auto">
+            <div className="text-center mb-8">
+                <div className="bg-orange-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <Unlock className="text-orange-600" size={32} />
+                </div>
+                <h2 className="text-2xl font-bold text-gray-800">จัดการการปลดล็อคด่าน (Level Unlock)</h2>
+                <p className="text-gray-500 mt-2">เลือกด่านที่ต้องการให้เด็กเล่นได้โดยไม่ต้องเก็บดาว</p>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {totalSessions.map(sessionId => {
+                    const isUnlocked = unlockedSessions.includes(sessionId);
+                    return (
+                        <div
+                            key={sessionId}
+                            onClick={() => handleToggle(sessionId)}
+                            className={`
+                                p-4 rounded-xl border-2 cursor-pointer transition-all flex items-center justify-between
+                                ${isUnlocked
+                                    ? 'border-green-500 bg-green-50 shadow-md transform scale-[1.02]'
+                                    : 'border-gray-200 bg-white hover:bg-gray-50 text-gray-400'
+                                }
+                            `}
+                        >
+                            <div className="flex items-center gap-3">
+                                <div className={`
+                                    w-10 h-10 rounded-full flex items-center justify-center font-bold text-lg
+                                    ${isUnlocked ? 'bg-green-500 text-white' : 'bg-gray-200 text-gray-500'}
+                                `}>
+                                    {sessionId}
+                                </div>
+                                <span className={`font-bold ${isUnlocked ? 'text-gray-800' : 'text-gray-400'}`}>
+                                    ด่านที่ {sessionId}
+                                </span>
+                            </div>
+
+                            {isUnlocked ? (
+                                <CheckCircle className="text-green-500" />
+                            ) : (
+                                <Lock className="text-gray-300" />
+                            )}
+                        </div>
+                    );
+                })}
+            </div>
+
+            <div className="mt-8 p-4 bg-blue-50 text-blue-800 text-sm rounded-xl text-center">
+                💡 การเปลี่ยนแปลงจะถูกบันทึกทันที
+            </div>
         </div>
     );
 };

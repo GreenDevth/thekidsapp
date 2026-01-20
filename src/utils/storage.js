@@ -86,6 +86,15 @@ export const unlockSessionWithStars = (sessionId, cost) => {
     return false; // Not enough stars
 };
 
+export const getUnlockedSessions = () => {
+    return loadProgress().unlockedSessions || [1];
+};
+
+export const setUnlockedSessions = (sessions) => {
+    const current = loadProgress();
+    saveProgress({ ...current, unlockedSessions: sessions });
+};
+
 // --- Child & Parent Data ---
 
 export const getChildName = () => {
