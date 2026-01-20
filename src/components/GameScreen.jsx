@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Volume2, ChevronRight, X, Sparkles, AlertCircle, Settings, Type } from 'lucide-react';
 import { speak } from '../utils/tts';
 import { playSound } from '../utils/sound';
+import { getPhonicsEnabled } from '../utils/storage';
 import VoiceSettingsModal from './VoiceSettingsModal';
 
 const GameScreen = ({ sessionData, onFinish, onExit }) => {
@@ -12,6 +13,13 @@ const GameScreen = ({ sessionData, onFinish, onExit }) => {
     const [feedback, setFeedback] = useState(null);
     const [score, setScore] = useState(0);
     const [showSettings, setShowSettings] = useState(false);
+    const [phonicsEnabled, setPhonicsEnabledState] = useState(getPhonicsEnabled());
+
+    // Update state when settings modal closes
+    const handleSettingsClose = () => {
+        setShowSettings(false);
+        setPhonicsEnabledState(getPhonicsEnabled());
+    };
 
     // ... (currentWord logic) ...
     const currentWord = sessionData[currentIndex];
@@ -57,6 +65,11 @@ const GameScreen = ({ sessionData, onFinish, onExit }) => {
             // Sound Effect instead of Speak
             playSound('click');
 
+            // Phonics Sound (if enabled)
+            if (phonicsEnabled) {
+                speak(char, 'en-US', true, 1.2);
+            }
+
             if (newUserInput.length === targetWord.length) {
                 // Word Complete
                 setFeedback('correct');
@@ -92,7 +105,7 @@ const GameScreen = ({ sessionData, onFinish, onExit }) => {
     return (
         <div className="min-h-screen flex flex-col p-4 max-w-3xl mx-auto">
             {/* Settings Modal */}
-            {showSettings && <VoiceSettingsModal onClose={() => setShowSettings(false)} />}
+            {showSettings && <VoiceSettingsModal onClose={handleSettingsClose} />}
 
             {/* Header */}
             <div className="flex justify-between items-center mb-6">
@@ -180,7 +193,12 @@ const GameScreen = ({ sessionData, onFinish, onExit }) => {
                         </button>
                         <button
                             onClick={spellWord}
-                            className="flex items-center gap-1.5 sm:gap-2 px-3 py-2 sm:px-5 sm:py-3 bg-brand-pink text-white rounded-xl sm:rounded-2xl shadow-lg hover:scale-105 transition-transform active:scale-95 font-bold text-sm sm:text-base"
+                            disabled={!phonicsEnabled}
+                            className={`flex items-center gap-1.5 sm:gap-2 px-3 py-2 sm:px-5 sm:py-3 rounded-xl sm:rounded-2xl shadow-lg font-bold text-sm sm:text-base transition-all
+                                ${phonicsEnabled
+                                    ? 'bg-brand-pink text-white hover:scale-105 active:scale-95'
+                                    : 'bg-gray-200 text-gray-400 cursor-not-allowed'}
+                            `}
                         >
                             <Type size={20} className="sm:w-6 sm:h-6" /> Spell
                         </button>

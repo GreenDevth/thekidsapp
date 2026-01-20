@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { X, Volume2 } from 'lucide-react';
 import { getVoices, getVoicePreference, setVoicePreference, speak } from '../utils/tts';
+import { getPhonicsEnabled, setPhonicsEnabled } from '../utils/storage';
 
 const VoiceSettingsModal = ({ onClose }) => {
     const [voices, setVoices] = useState([]);
@@ -105,6 +106,17 @@ const VoiceSettingsModal = ({ onClose }) => {
                     </div>
                 </div>
 
+                {/* Phonics Toggle */}
+                <div className="mt-8 pt-6 border-t border-gray-100">
+                    <div className="flex items-center justify-between">
+                        <div>
+                            <h3 className="font-bold text-gray-800">เสียงตัวสะกด (Phonics)</h3>
+                            <p className="text-gray-500 text-sm">อ่านออกเสียงเมื่อกดตัวอักษร</p>
+                        </div>
+                        <PhonicsToggle />
+                    </div>
+                </div>
+
                 <button
                     onClick={handleSave}
                     className="w-full mt-8 bg-brand-green text-white py-3 rounded-2xl font-bold text-lg shadow-lg hover:brightness-110 active:scale-95 transition-all"
@@ -117,3 +129,22 @@ const VoiceSettingsModal = ({ onClose }) => {
 };
 
 export default VoiceSettingsModal;
+
+const PhonicsToggle = () => {
+    const [enabled, setEnabled] = useState(getPhonicsEnabled());
+
+    const toggle = () => {
+        const newState = !enabled;
+        setEnabled(newState);
+        setPhonicsEnabled(newState);
+    };
+
+    return (
+        <button
+            onClick={toggle}
+            className={`w-14 h-8 rounded-full p-1 transition-colors duration-300 ${enabled ? 'bg-green-500' : 'bg-gray-300'}`}
+        >
+            <div className={`bg-white w-6 h-6 rounded-full shadow-md transform transition-transform duration-300 ${enabled ? 'translate-x-6' : 'translate-x-0'}`} />
+        </button>
+    );
+};

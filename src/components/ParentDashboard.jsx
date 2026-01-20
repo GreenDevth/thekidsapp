@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Home, Lock, FileText, RefreshCw, Trash2, CheckCircle, Smartphone, BookOpen, Unlock } from 'lucide-react';
-import { getVocabData, saveVocabData, resetAllData, getParentPin, setParentPin, saveProgress, loadProgress, getUnlockedSessions, setUnlockedSessions } from '../utils/storage';
+import { Home, Lock, FileText, RefreshCw, Trash2, CheckCircle, Smartphone, BookOpen, Unlock, Volume2 } from 'lucide-react';
+import { getVocabData, saveVocabData, resetAllData, getParentPin, setParentPin, saveProgress, loadProgress, getUnlockedSessions, setUnlockedSessions, getPhonicsEnabled, setPhonicsEnabled } from '../utils/storage';
 import { fetchVocabFromSheet, updateSheetData } from '../utils/googleSheet';
 import { GOOGLE_APPS_SCRIPT_URL } from '../config';
 import { useModal } from '../contexts/ModalContext';
@@ -299,9 +299,13 @@ const ParentDashboard = ({ onExit }) => {
                     )}
 
                     {activeTab === 'settings' && (
-                        <div className="max-w-sm mx-auto py-4">
-                            <h3 className="text-xl font-bold mb-6 text-center">เปลี่ยนรหัสผ่าน (PIN)</h3>
-                            <PinChangeForm onSave={handleChangePin} />
+                        <div className="max-w-md mx-auto py-4 flex flex-col gap-6">
+                            <SoundSettings />
+                            <hr className="border-gray-100" />
+                            <div>
+                                <h3 className="text-xl font-bold mb-6 text-center text-gray-800">เปลี่ยนรหัสผ่าน (PIN)</h3>
+                                <PinChangeForm onSave={handleChangePin} />
+                            </div>
                         </div>
                     )}
 
@@ -311,6 +315,37 @@ const ParentDashboard = ({ onExit }) => {
                 </div>
             </main >
         </div >
+    );
+};
+
+const SoundSettings = () => {
+    const [enabled, setEnabled] = useState(getPhonicsEnabled());
+
+    const toggle = () => {
+        const newState = !enabled;
+        setEnabled(newState);
+        setPhonicsEnabled(newState);
+    };
+
+    return (
+        <div className="bg-white p-6 rounded-2xl shadow-sm border-2 border-gray-100 flex items-center justify-between hover:border-blue-100 transition-colors">
+            <div className="flex items-center gap-4">
+                <div className="bg-blue-100 p-3 rounded-full">
+                    <Volume2 className="text-blue-600" size={24} />
+                </div>
+                <div>
+                    <h3 className="font-bold text-gray-800 text-lg">เสียงตัวสะกด (Phonics)</h3>
+                    <p className="text-gray-500 text-sm">อ่านออกเสียงตัวอักษรเมื่อกดแป้นพิมพ์</p>
+                </div>
+            </div>
+
+            <button
+                onClick={toggle}
+                className={`w-16 h-9 rounded-full p-1 transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-400 ${enabled ? 'bg-green-500' : 'bg-gray-300'}`}
+            >
+                <div className={`bg-white w-7 h-7 rounded-full shadow-md transform transition-transform duration-300 ${enabled ? 'translate-x-7' : 'translate-x-0'}`} />
+            </button>
+        </div>
     );
 };
 

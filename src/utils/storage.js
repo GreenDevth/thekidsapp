@@ -7,6 +7,7 @@ const defaultState = {
     childName: '',       // Registered child name
     parentPin: '',       // PIN for parent portal
     customVocab: null,   // Dynamic vocab list. If null, use CSV default.
+    phonicsEnabled: true, // Enable/Disable spelling sounds
 };
 
 // --- Core Load/Save ---
@@ -129,4 +130,14 @@ export const saveVocabData = (vocabList) => {
 export const resetAllData = () => {
     localStorage.removeItem(STORAGE_KEY);
     window.location.reload();
+};
+
+export const getPhonicsEnabled = () => {
+    const current = loadProgress();
+    return current.phonicsEnabled !== undefined ? current.phonicsEnabled : true;
+};
+
+export const setPhonicsEnabled = (enabled) => {
+    const current = loadProgress();
+    saveProgress({ ...current, phonicsEnabled: enabled });
 };
